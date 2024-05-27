@@ -17,7 +17,7 @@ import tensorflow
 from keras.models import load_model
 
 
-TOKEN = "MTE4NjczMDYxNzcxNTU1NjM3Mw.GIDpFg.FoxBwlWCN6638-OnSYu6xHyWIMrfpsojG9vjO4"
+TOKEN = "BOT TOKEN"
 
 SETTINGS_FILE = "Settings.txt"
 
@@ -321,4 +321,4 @@ async def predict(ctx):
                         await message.channel.send(embed=embed)
 
 
-bot.run("MTA2ODA2MjEzNTc3MjUyODY5MA.GxLXDE.k-zGHB2enN9dyzSFg3UKtkKFgL96xgLVgABTr4")
+bot.run(TOKEN)

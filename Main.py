@@ -3,8 +3,6 @@ import aiosqlite
 import discord
 from discord.ext import commands, tasks
 
-from KeepAlive import keep_alive
-
 import os
 import re
 import json
@@ -19,25 +17,22 @@ import tensorflow
 from keras.models import load_model
 
 
-TOKEN = 'MTE4NjczMDYxNzcxNTU1NjM3Mw.GIDpFg.FoxBwlWCN6638-OnSYu6xHyWIMrfpsojG9vjO4'
+TOKEN = "MTE4NjczMDYxNzcxNTU1NjM3Mw.GIDpFg.FoxBwlWCN6638-OnSYu6xHyWIMrfpsojG9vjO4"
 
-SETTINGS_FILE = 'Settings.txt'
-
-HUNT_FILE = 'Hunt.txt'
-
+SETTINGS_FILE = "Settings.txt"
 
 intents = discord.Intents.all()
 
-bot = commands.Bot(command_prefix='!', intents=intents)
-bot.remove_command('help')
+bot = commands.Bot(command_prefix="+", intents=intents)
+bot.remove_command("help")
 
-loaded_model = load_model('model.h5', compile=False)
+loaded_model = load_model("model.h5", compile=False)
 
 
-with open('classes.json', 'r') as f:
+with open("classes.json", "r") as f:
     classes = json.load(f)
 
-with open('pokemon', 'r', encoding='utf8') as file:
+with open("pokemon", "r", encoding="utf8") as file:
     pokemon_list = file.read()
 
 
@@ -45,7 +40,7 @@ with open('pokemon', 'r', encoding='utf8') as file:
 async def on_ready():
 
     await bot.change_presence(status=discord.Status.online)
-    print('------- Logged In As : {0.user}'.format(bot))
+    print("------- Logged In As : {0.user}".format(bot))
     bot.db = await aiosqlite.connect("pokemon.db")
     await bot.db.execute("CREATE TABLE IF NOT EXISTS pokies (command str)")
     print("------- Pokemon Table Created -------")
@@ -58,23 +53,35 @@ class MyView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=30)
         button = discord.ui.Button(
-            label='Invite The BOT',
+            label="Invite The BOT",
             style=discord.ButtonStyle.url,
-            url='https://discord.com/api/oauth2/authorize?client_id=1068062135772528690&permissions=8&scope=bot'
+            url="https://discord.com/api/oauth2/authorize?client_id=1068062135772528690&permissions=8&scope=bot",
         )
         self.add_item(button)
 
 
 class Settings(discord.ui.View):
 
-    @discord.ui.button(label="Enable AutoHint", style=discord.ButtonStyle.green, custom_id="enable_autohint")
-    async def enable_autohint(self, button: discord.ui.Button, interaction: discord.Interaction):
+    @discord.ui.button(
+        label="Enable AutoHint",
+        style=discord.ButtonStyle.green,
+        custom_id="enable_autohint",
+    )
+    async def enable_autohint(
+        self, button: discord.ui.Button, interaction: discord.Interaction
+    ):
 
         await interaction.message.delete()
         await enableautohint(interaction)
 
-    @discord.ui.button(label="Disable AutoHint", style=discord.ButtonStyle.red, custom_id="disable_autohint")
-    async def disable_autohint(self, button: discord.ui.Button, interaction: discord.Interaction):
+    @discord.ui.button(
+        label="Disable AutoHint",
+        style=discord.ButtonStyle.red,
+        custom_id="disable_autohint",
+    )
+    async def disable_autohint(
+        self, button: discord.ui.Button, interaction: discord.Interaction
+    ):
 
         await interaction.message.delete()
         await disableautohint(interaction)
@@ -83,18 +90,18 @@ class Settings(discord.ui.View):
 def solve(message):
     hint = []
     for i in range(15, len(message) - 1):
-        if message[i] != '\\':
+        if message[i] != "\\":
             hint.append(message[i])
-    hint_string = ''
+    hint_string = ""
     for i in hint:
         hint_string += i
-    hint_replaced = hint_string.replace('_', '.')
-    return re.findall('^' + hint_replaced + '$', pokemon_list, re.MULTILINE)
+    hint_replaced = hint_string.replace("_", ".")
+    return re.findall("^" + hint_replaced + "$", pokemon_list, re.MULTILINE)
 
 
 def get_target_servers():
     try:
-        with open(SETTINGS_FILE, 'r') as file:
+        with open(SETTINGS_FILE, "r") as file:
             servers = [int(line.strip()) for line in file.readlines()]
         return servers
     except FileNotFoundError:
@@ -105,41 +112,16 @@ def add_server_id(server_id):
     servers = get_target_servers()
     if server_id not in servers:
         servers.append(server_id)
-        with open(SETTINGS_FILE, 'w') as file:
-            file.write('\n'.join(map(str, servers)))
+        with open(SETTINGS_FILE, "w") as file:
+            file.write("\n".join(map(str, servers)))
 
 
 def remove_server_id(server_id):
     servers = get_target_servers()
     if server_id in servers:
         servers.remove(server_id)
-        with open(SETTINGS_FILE, 'w') as file:
-            file.write('\n'.join(map(str, servers)))
-
-
-def add_hunt(user_id, pokemon_name):
-    with open(HUNT_FILE, 'a') as file:
-        file.write(f"{user_id} {pokemon_name}\n")
-
-
-def remove_hunt(user_id, pokemon_name):
-    with open(HUNT_FILE, 'r') as file:
-        data = file.readlines()
-    with open(HUNT_FILE, 'w') as file:
-        for line in data:
-            if f"{user_id} {pokemon_name}\n" != line:
-                file.write(line)
-
-
-def get_hunts():
-    with open(HUNT_FILE, 'r') as file:
-        data = file.readlines()
-
-    hunts = []
-
-    for line in data:
-        hunts.append(line.strip().split(' '))
-    return hunts
+        with open(SETTINGS_FILE, "w") as file:
+            file.write("\n".join(map(str, servers)))
 
 
 async def preprocess_image(image):
@@ -169,7 +151,7 @@ async def identify(message: discord.Message):
     else:
         for i in c:
 
-            confidence = '100'
+            confidence = "100"
 
             embed = await create_embed(i.capitalize(), confidence)
             await message.channel.send(embed=embed, view=MyView())
@@ -182,15 +164,17 @@ async def enableautohint(interaction):
     if server_id not in get_target_servers():
         add_server_id(server_id)
 
-        embed = discord.Embed(title="AutoHint Enabled",
-                              description="AutoHint Enabled For The Server")
+        embed = discord.Embed(
+            title="AutoHint Enabled", description="AutoHint Enabled For The Server"
+        )
 
         await interaction.response.send_message(embed=embed)
 
     else:
 
-        embed = discord.Embed(title="Error",
-                              description="AutoHint Is Already Enabled In The Server")
+        embed = discord.Embed(
+            title="Error", description="AutoHint Is Already Enabled In The Server"
+        )
 
         await interaction.response.send_message(embed=embed)
 
@@ -202,14 +186,16 @@ async def disableautohint(interaction):
     if server_id not in get_target_servers():
         add_server_id(server_id)
 
-        embed = discord.Embed(title="AutoHint Disabled",
-                              description="AutoHint Disabled For The Server")
+        embed = discord.Embed(
+            title="AutoHint Disabled", description="AutoHint Disabled For The Server"
+        )
 
         await interaction.response.send_message(embed=embed)
 
     else:
-        embed = discord.Embed(title="Error",
-                              description="AutoHint Is Already Disabled In The Server")
+        embed = discord.Embed(
+            title="Error", description="AutoHint Is Already Disabled In The Server"
+        )
 
         await interaction.response.send_message(embed=embed)
 
@@ -217,7 +203,7 @@ async def disableautohint(interaction):
 @bot.event
 async def on_message(message):
 
-    while not hasattr(bot, 'db'):
+    while not hasattr(bot, "db"):
         await asyncio.sleep(1.0)
 
     channel = message.channel
@@ -240,37 +226,22 @@ async def on_message(message):
                                         image_data = BytesIO(content)
                                         image = Image.open(image_data)
                             preprocessed_image = await preprocess_image(image)
-                            predictions = loaded_model.predict(
-                                preprocessed_image)
+                            predictions = loaded_model.predict(preprocessed_image)
                             confidence = np.max(predictions) * 100
                             classes_x = np.argmax(predictions, axis=1)
                             name = list(classes.keys())[classes_x[0]]
                             embed = await create_embed(name.capitalize(), confidence)
                             await message.channel.send(embed=embed, view=MyView())
 
-                            pokemon_name = name
-
-                            hunts = get_hunts()
-
-                            for items in hunts:
-                                if items[1] == pokemon_name:
-                                    user = bot.get_user(int(items[0]))
-                                    await user.send(f"A {pokemon_name} Has Appeared In {channel.mention}")
-
-                                    if user in message.guild.members:
-                                        await message.channel.send(f"{pokemon_name} Hunters : {user.mention}")
-
-                                else:
-                                    pass
-
-        elif 'wrong' in message.content:
+        elif "wrong" in message.content:
             await asyncio.sleep(1)
             embed = discord.Embed(
                 title="Pokemon Name Error",
-                description="Please Use <@!716390085896962058>Hint")
+                description="Please Use <@!716390085896962058> Hint",
+            )
             await message.channel.send(embed=embed)
 
-        elif 'The pokémon is' in message.content:
+        elif "The pokémon is" in message.content:
             await asyncio.sleep(1)
             await identify(message)
 
@@ -284,67 +255,70 @@ async def on_message(message):
             res = await cur.fetchone()
             if res is None:
                 await bot.db.execute(
-                    "INSERT OR IGNORE INTO pokies (command) VALUES (?)", ("hold", ))
+                    "INSERT OR IGNORE INTO pokies (command) VALUES (?)", ("hold",)
+                )
             else:
-                await bot.db.execute("UPDATE pokies SET command = ?", ("hold", ))
+                await bot.db.execute("UPDATE pokies SET command = ?", ("hold",))
             await bot.db.commit()
 
     await bot.process_commands(message)
 
 
-@bot.slash_command(name="settings",
-                   description="Displays Bot Settings For The Servers")
+@bot.command(name="settings", description="Displays Bot Settings For The Servers")
 async def settings(message):
 
     if message.author.guild_permissions.administrator:
-        embed = discord.Embed(title="Settings",
-                              description='Settings Of Poke Hint AI BOT')
-        embed.add_field(name="Enable Autohint",
-                        value="Enable Auto AI Hinting",
-                        inline=False)
-        embed.add_field(name="Disable Autohint",
-                        value="Disable Auto AI Hinting",
-                        inline=False)
+        embed = discord.Embed(
+            title="Settings", description="Settings Of Poke Hint AI BOT"
+        )
+        embed.add_field(
+            name="Enable Autohint", value="Enable Auto AI Hinting", inline=False
+        )
+        embed.add_field(
+            name="Disable Autohint", value="Disable Auto AI Hinting", inline=False
+        )
 
         await message.respond(embed=embed, view=Settings())
 
     else:
         embed = discord.Embed(
             title="Permission Denied",
-            description='You Need Administrator Permission To Run The Command')
+            description="You Need Administrator Permission To Run The Command",
+        )
 
         await message.respond(embed=embed)
 
 
-@bot.slash_command(name='help',
-                   description='Displays Information About Available Commands')
-async def help(ctx):
-    embed = discord.Embed(title='Help', description='BOT Command List')
+@bot.command(name="predict", description="Predicts The Pokemon In The Image")
+async def predict(ctx):
 
-    embed.add_field(name='!settings',
-                    value='Displays Bot Settings For The Server',
-                    inline=False)
-    embed.add_field(name='!help',
-                    value='Displays Inforamtion About The Availabe Commands',
-                    inline=False)
+    message = ctx.message.reference.resolved
 
-    await ctx.respond(embed=embed)
+    if message.author.id == 716390085896962058:
+        if len(message.embeds) > 0:
+            embed = message.embeds[0]
+            if "appeared!" in embed.title:
+
+                cur = await bot.db.execute("SELECT command from pokies")
+                res = await cur.fetchone()
+                if res is None or res[0] != "hold":
+                    if embed.image:
+                        url = embed.image.url
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(url=url) as resp:
+                                if resp.status == 200:
+                                    content = await resp.read()
+                                    image_data = BytesIO(content)
+                                    image = Image.open(image_data)
+
+                        preprocessed_image = await preprocess_image(image)
+                        predictions = loaded_model.predict(preprocessed_image)
+                        confidence = np.max(predictions) * 100
+                        classes_x = np.argmax(predictions, axis=1)
+                        name = list(classes.keys())[classes_x[0]]
+
+                        embed = await create_embed(name.capitalize(), confidence)
+                        await message.channel.send(embed=embed)
 
 
-@bot.slash_command(name='hunt')
-async def hunt(ctx, pokemon_name: str):
-
-    user_id = ctx.author.id
-    add_hunt(user_id, pokemon_name)
-    await ctx.send(f"You are now hunting {pokemon_name}!")
-
-
-@bot.slash_command(name='removehunt')
-async def remove_hunt(ctx, pokemon_name: str):
-
-    user_id = ctx.author.id
-    remove_hunt(user_id, pokemon_name)
-    await ctx.send(f"You are no longer hunting {pokemon_name}.")
-
-keep_alive()
-bot.run(TOKEN)
+bot.run("MTA2ODA2MjEzNTc3MjUyODY5MA.GxLXDE.k-zGHB2enN9dyzSFg3UKtkKFgL96xgLVgABTr4")
